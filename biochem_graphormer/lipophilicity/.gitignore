@@ -1,0 +1,8 @@
+*__pycache__
+*build/
+*algos.c*
+*.domino*
+.domino
+.dominoignore
+.dominoresults
+results/

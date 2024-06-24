@@ -1,0 +1,7 @@
+torch
+rdkit
+numpy
+pandas
+cython
+pydantic
+torch_geometric
