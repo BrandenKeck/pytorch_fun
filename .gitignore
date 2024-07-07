@@ -1,0 +1,7 @@
+*__pycache__
+.domino*
+.vscode*
+vscode_settings
+results
+*.pkl
+*.h5
