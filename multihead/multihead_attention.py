@@ -1,5 +1,7 @@
 # Basic Multihead Attention Implementation
 # See: https://github.com/CyberZHG/torch-multi-head-attention/blob/master/torch_multi_head_attention/multi_head_attention.py
+# See: https://github.com/pytorch/pytorch/blob/a1a2023eb86805b1a3867dbda9c89be3cd63dd27/torch/nn/functional.py#L6081
+
 
 # Imports
 import math
@@ -8,7 +10,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-# Multihead Attention Modulde
+# Multihead Attention Module
 class MultiheadAttention(nn.Module):
 
     def __init__(self,
@@ -34,12 +36,12 @@ class MultiheadAttention(nn.Module):
         mask = mask.repeat(self.nheads, 1, 1).to(self.device)
         
         # Create Q, K, V matrices and reshape
-        bsz, tgt_len, _ = q.shape
+        bsz, seq_len, _ = q.shape
         q, k, v = self.linear_q(q), self.linear_k(k), self.linear_v(v)
         q, k, v = self.activation(q), self.activation(k), self.activation(v)
-        q = q.view(tgt_len, bsz * self.nheads, self.head_dim).transpose(0, 1)
-        k = k.view(tgt_len, bsz * self.nheads, self.head_dim).transpose(0, 1)
-        v = v.view(tgt_len, bsz * self.nheads, self.head_dim).transpose(0, 1)
+        q = q.view(seq_len, bsz * self.nheads, self.head_dim).transpose(0, 1)
+        k = k.view(seq_len, bsz * self.nheads, self.head_dim).transpose(0, 1)
+        v = v.view(seq_len, bsz * self.nheads, self.head_dim).transpose(0, 1)
 
         # Apply attention
         q_scaled = q * math.sqrt(1.0 / float(self.embed_size))
@@ -49,11 +51,11 @@ class MultiheadAttention(nn.Module):
         attn_output_weights = F.softmax(attn_output_weights, dim=-1)
         attn_output = torch.bmm(attn_output_weights, v)
         attn_output = (
-            attn_output.transpose(0, 1).contiguous().view(tgt_len * bsz, self.embed_size)
+            attn_output.transpose(0, 1).contiguous().view(seq_len * bsz, self.embed_size)
         )
         attn_output = self.linear_o(attn_output)
         attn_output = self.activation(attn_output)
-        attn_output = attn_output.view(bsz, tgt_len, self.embed_size)
+        attn_output = attn_output.view(bsz, seq_len, self.embed_size)
 
         # Return Outputs
         return attn_output, attn_output_weights
@@ -62,4 +64,4 @@ class MultiheadAttention(nn.Module):
     @staticmethod
     def get_mask(x):
         batch_size, seq_len, _ = x.shape
-        return torch.tril(1e9*torch.ones(seq_len, seq_len)).view(1, seq_len, seq_len).repeat(batch_size, 1, 1) - 1e9
+        return torch.tril((1e9)*torch.ones(seq_len, seq_len)).view(1, seq_len, seq_len).repeat(batch_size, 1, 1) - 1e9
